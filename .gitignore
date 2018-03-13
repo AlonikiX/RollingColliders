@@ -1,5 +1,5 @@
-Library/*
-obj/*
-Temp/*
-Builds/*
-.vs/*
+Library/**
+obj/**
+Temp/**
+Builds/**
+.vs/**
