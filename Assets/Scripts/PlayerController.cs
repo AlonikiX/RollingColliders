@@ -7,9 +7,11 @@ using System.Linq;
 
 public class PlayerController : NetworkBehaviour {
 
+    //normal moving speed of the player
     public float speed;
-    public float speedLimit;
+    //player's rigidbody component
     private Rigidbody rb;
+    //mana, using every skill will consume mana
     int mana = 100;
     bool canSkill;
     float oldTime;
@@ -18,11 +20,11 @@ public class PlayerController : NetworkBehaviour {
     float ort;
     float crt;
 
-    bool isSet = false;
-
     private Vector3 velocity;
     [SyncVar]
     public string playerName;
+
+    private Dictionary<NetworkInstanceId, GameObject> players = new Dictionary<NetworkInstanceId, GameObject>();
 
 	// Use this for initialization
 	void Start () {
@@ -33,13 +35,12 @@ public class PlayerController : NetworkBehaviour {
 
         ort = 0;
         crt = 0;
-        //if (!isSet) {
-        //    playerName = "Server";
-        //    gameObject.GetComponent<MeshRenderer>().material.color = Color.green;
-        //    isSet = true;
-        //}else {
-        //    playerName = "Client";
-        //}
+
+        var playerGameObjects = GameObject.FindGameObjectsWithTag("Player");
+        foreach (var playerGameObject in playerGameObjects) {
+            var networkIdentity = playerGameObject.GetComponent<NetworkIdentity>();
+            players.Add(networkIdentity.netId, playerGameObject);
+        }
 	}
 
     // Update is called once per frame
@@ -62,21 +63,9 @@ public class PlayerController : NetworkBehaviour {
         var moveZ = Input.GetAxisRaw("Vertical");
 
         if ((!moveX.Equals(0.0f)) || (!moveZ.Equals(0.0f))) {
-            velocity = new Vector3(moveX * speedLimit, 0, moveZ * speedLimit);
-            //rb.AddForce(new Vector3(moveX * speedLimit, 0, moveZ * speedLimit));
-            if (velocity.magnitude >= speed) {
-                velocity = velocity.normalized * speed;
-            }
-            Debug.Log(playerName);
-            CmdMove(velocity, gameObject.GetComponent<NetworkIdentity>().netId.ToString());
-          
-            //if (isServer) {
-            //    rb.velocity = 
-            //}
-
+            velocity = new Vector3(moveX * speed, 0, moveZ * speed);
+            CmdMove(velocity, gameObject.GetComponent<NetworkIdentity>().netId);
         }
-
-
 
         if (mana < 100) {
             mana += 1;
@@ -98,31 +87,26 @@ public class PlayerController : NetworkBehaviour {
 
 
         if (isServer) {
-            if (crt - ort >= Time.deltaTime * 30) {
+            if (crt - ort >= Time.deltaTime * 10) {
                 ort = crt;
 
+                foreach (var player in players) {
+                    var playerRigidbody = player.Value.GetComponent<Rigidbody>();
 
-                var clients = GameObject.FindGameObjectsWithTag("Player");
-                foreach (var client in clients) {
-                    var clientRb = client.GetComponent<Rigidbody>();
-
-                    RpcSyncObject(client.GetComponent<NetworkIdentity>().netId.ToString(), clientRb.position, clientRb.velocity);
+                    RpcSyncObject(player.Value.GetComponent<NetworkIdentity>().netId, playerRigidbody.position, playerRigidbody.velocity);
                 }
             }
         }
 	}
 
     [ClientRpc]
-    public void RpcSyncObject(string id, Vector3 pos, Vector3 vel) {
-        var clients = GameObject.FindGameObjectsWithTag("Player");
+    public void RpcSyncObject(NetworkInstanceId id, Vector3 pos, Vector3 vel) {
 
-        foreach (var client in clients) {
-            if (client.GetComponent<NetworkIdentity>().netId.ToString().Equals(id)) {
-                //if (!client.GetComponent<NetworkIdentity>().isLocalPlayer) {
-                var clientRb = client.GetComponent<Rigidbody>();
-                clientRb.position = pos;
-                clientRb.velocity = vel;
-                //}
+        foreach (var player in players) {
+            if (player.Key == id) {
+                var playerRigidbody = player.Value.GetComponent<Rigidbody>();
+                playerRigidbody.position = pos;
+                playerRigidbody.velocity = vel;
             }
         }
 
@@ -130,28 +114,23 @@ public class PlayerController : NetworkBehaviour {
 
 
     [Command]
-    public void CmdMove(Vector3 velocity, string id) {
-        var clients = GameObject.FindGameObjectsWithTag("Player");
-        foreach (var client in clients) {
-            if (client.GetComponent<NetworkIdentity>().netId.ToString().Equals(id)) {
-                //if (!client.GetComponent<NetworkIdentity>().isLocalPlayer) {
-                var clientRb = client.GetComponent<Rigidbody>();
-                clientRb.velocity = velocity;
-                RpcMove(velocity, client.GetComponent<NetworkIdentity>().netId.ToString());
-                //}
+    public void CmdMove(Vector3 velocity, NetworkInstanceId id) {
+        foreach (var player in players) {
+            if (player.Key == id) {
+                var playerRigidbody = player.Value.GetComponent<Rigidbody>();
+                playerRigidbody.velocity = velocity;
+                RpcMove(velocity, player.Value.GetComponent<NetworkIdentity>().netId);
             }
 
         }
-        //RpcMove(velocity)
     }
 
     [ClientRpc]
-    public void RpcMove(Vector3 velocity, string id) {
-        var clients = GameObject.FindGameObjectsWithTag("Player");
-        foreach (var client in clients) {
-            if (client.GetComponent<NetworkIdentity>().netId.ToString().Equals(id)) {
-                var clientRb = client.GetComponent<Rigidbody>();
-                clientRb.velocity = velocity;
+    public void RpcMove(Vector3 velocity, NetworkInstanceId id) {
+        foreach (var player in players) {
+            if (player.Key == id) {
+                var playerRigidbody = player.Value.GetComponent<Rigidbody>();
+                playerRigidbody.velocity = velocity;
             }
 
         }

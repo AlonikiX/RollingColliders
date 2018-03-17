@@ -167,7 +167,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 10
-  speedLimit: 10
   playerName: 
 --- !u!135 &135032118890171120
 SphereCollider:
