@@ -5,7 +5,8 @@ using UnityEngine;
 using UnityEngine.Networking;
 using System.Linq;
 
-public class PlayerController : NetworkBehaviour {
+public class PlayerController : NetworkBehaviour
+{
 
     //normal moving speed of the player
     public float speed;
@@ -20,14 +21,29 @@ public class PlayerController : NetworkBehaviour {
     float ort;
     float crt;
 
-    private Vector3 velocity;
-    [SyncVar]
-    public string playerName;
+    private Vector3 curretnVelocity;
 
-    private Dictionary<NetworkInstanceId, GameObject> players = new Dictionary<NetworkInstanceId, GameObject>();
+    private Dictionary<NetworkInstanceId, GameObject> Players
+    {
+        get
+        {
+            Dictionary<NetworkInstanceId, GameObject> players = new Dictionary<NetworkInstanceId, GameObject>();
+            var playerGameObjects = GameObject.FindGameObjectsWithTag("Player");
+            foreach (var playerGameObject in playerGameObjects)
+            {
+                var networkIdentity = playerGameObject.GetComponent<NetworkIdentity>();
+                players.Add(networkIdentity.netId, playerGameObject);
+            }
+            return players;
+        }
+    }
 
-	// Use this for initialization
-	void Start () {
+    private Dictionary<NetworkInstanceId, Queue<Vector3>> positionBufferPool = new Dictionary<NetworkInstanceId, Queue<Vector3>>();
+    private Dictionary<NetworkInstanceId, Queue<Vector3>> velocityBufferPool = new Dictionary<NetworkInstanceId, Queue<Vector3>>();
+
+    // Use this for initialization
+    void Start()
+    {
         rb = GetComponent<Rigidbody>();
         //rb.velocity = new Vector3(3, 0, -3);
         oldTime = 0;
@@ -36,49 +52,75 @@ public class PlayerController : NetworkBehaviour {
         ort = 0;
         crt = 0;
 
-        var playerGameObjects = GameObject.FindGameObjectsWithTag("Player");
-        foreach (var playerGameObject in playerGameObjects) {
-            var networkIdentity = playerGameObject.GetComponent<NetworkIdentity>();
-            players.Add(networkIdentity.netId, playerGameObject);
-        }
-	}
+
+    }
 
     // Update is called once per frame
-    void FixedUpdate () {
-        if (!isLocalPlayer) {
+    void FixedUpdate()
+    {
+        if (!isLocalPlayer)
+        {
             return;
         }
 
-        velocity = rb.velocity;
+        foreach (var player in Players)
+        {
+            //var playerRigidbody = player.Value.GetComponent<Rigidbody>();
+            //if (positionBufferPool.ContainsKey(player.Key))
+            //{
+            //    var positionBuffer = positionBufferPool[player.Key];
+            //    if (positionBuffer.Count > 0)
+            //    {
+            //        playerRigidbody.position = positionBuffer.Dequeue();
+            //    }
+            //}
+            //if (velocityBufferPool.ContainsKey(player.Key))
+            //{
+            //    var velocityBuffer = velocityBufferPool[player.Key];
+            //    if (velocityBuffer.Count > 0)
+            //    {
+            //        playerRigidbody.velocity = velocityBuffer.Dequeue();
+            //    }
+            //}
+        }
 
         currentTime += Time.deltaTime;
         crt += Time.deltaTime;
-        if (currentTime - oldTime < 0.0667) {
+        if (currentTime - oldTime < 0.0667)
+        {
             return;
-        }else {
+        }
+        else
+        {
             oldTime = currentTime;
         }
         Debug.Log(rb.velocity);
         var moveX = Input.GetAxisRaw("Horizontal");
         var moveZ = Input.GetAxisRaw("Vertical");
 
-        if ((!moveX.Equals(0.0f)) || (!moveZ.Equals(0.0f))) {
-            velocity = new Vector3(moveX * speed, 0, moveZ * speed);
-            CmdMove(velocity, gameObject.GetComponent<NetworkIdentity>().netId);
+        if ((!moveX.Equals(0.0f)) || (!moveZ.Equals(0.0f)))
+        {
+            curretnVelocity = new Vector3(moveX * speed, 0, moveZ * speed);
+            CmdMovePlayer(curretnVelocity, gameObject.GetComponent<NetworkIdentity>().netId);
+
         }
 
-        if (mana < 100) {
+        if (mana < 100)
+        {
             mana += 1;
         }
 
-        if (mana == 100) {
+        if (mana == 100)
+        {
 
-            if (Input.GetKey(KeyCode.Space)) {
+            if (Input.GetKey(KeyCode.Space))
+            {
                 rb.velocity = new Vector3(rb.velocity.x, 10, rb.velocity.z);
                 mana -= 100;
             }
 
-            if (Input.GetKey(KeyCode.J)) {
+            if (Input.GetKey(KeyCode.J))
+            {
                 rb.velocity = new Vector3(rb.velocity.x * 3, rb.velocity.y, rb.velocity.z * 3);
                 mana -= 100;
             }
@@ -86,60 +128,74 @@ public class PlayerController : NetworkBehaviour {
         }
 
 
-        if (isServer) {
-            if (crt - ort >= Time.deltaTime * 10) {
+        if (isServer)
+        {
+            if (crt - ort >= Time.deltaTime * 4)
+            {
                 ort = crt;
 
-                foreach (var player in players) {
+                foreach (var player in Players)
+                {
                     var playerRigidbody = player.Value.GetComponent<Rigidbody>();
-
-                    RpcSyncObject(player.Value.GetComponent<NetworkIdentity>().netId, playerRigidbody.position, playerRigidbody.velocity);
+                    RpcSyncObject(player.Key, playerRigidbody.position, playerRigidbody.velocity);
                 }
             }
         }
-	}
-
-    [ClientRpc]
-    public void RpcSyncObject(NetworkInstanceId id, Vector3 pos, Vector3 vel) {
-
-        foreach (var player in players) {
-            if (player.Key == id) {
-                var playerRigidbody = player.Value.GetComponent<Rigidbody>();
-                playerRigidbody.position = pos;
-                playerRigidbody.velocity = vel;
-            }
-        }
-
     }
 
+    [ClientRpc]
+    public void RpcSyncObject(NetworkInstanceId id, Vector3 pos, Vector3 vel)
+    {
+
+        var player = Players[id];
+        var playerRigidbody = player.GetComponent<Rigidbody>();
+        playerRigidbody.position = pos;
+        playerRigidbody.velocity = vel;
+
+        //if (!positionBufferPool.ContainsKey(id))
+        //{
+        //    positionBufferPool.Add(id, new Queue<V   ector3>());
+        //}
+        //var positionBuffer = positionBufferPool[id];
+
+        //if (!velocityBufferPool.ContainsKey(id))
+        //{
+        //    velocityBufferPool.Add(id, new Queue<Vector3>());
+        //}
+        //var velocityBuffer = velocityBufferPool[id];
+
+        //var posDelta = playerRigidbody.position - pos;
+        //var posInterpolation = posDelta / 4;
+        //var velDelta = playerRigidbody.velocity - vel;
+        //var velInterpolation = velDelta / 4;
+        //for (int i = 1; i <= 4; i++)
+        //{
+            //positionBuffer.Enqueue(playerRigidbody.position + posInterpolation * i);
+            //velocityBuffer.Enqueue(playerRigidbody.velocity + velInterpolation * i);
+        //}
+        //playerRigidbody.position = positionBuffer.Dequeue();
+        //playerRigidbody.velocity = velocityBuffer.Dequeue();
+
+    }
 
     [Command]
-    public void CmdMove(Vector3 velocity, NetworkInstanceId id) {
-        foreach (var player in players) {
-            if (player.Key == id) {
-                var playerRigidbody = player.Value.GetComponent<Rigidbody>();
-                playerRigidbody.velocity = velocity;
-                RpcMove(velocity, player.Value.GetComponent<NetworkIdentity>().netId);
-            }
-
-        }
+    public void CmdMovePlayer(Vector3 velocity, NetworkInstanceId id)
+    {
+        MovePlayer(velocity, id);
+        RpcMovePlayer(velocity, id);
     }
 
     [ClientRpc]
-    public void RpcMove(Vector3 velocity, NetworkInstanceId id) {
-        foreach (var player in players) {
-            if (player.Key == id) {
-                var playerRigidbody = player.Value.GetComponent<Rigidbody>();
-                playerRigidbody.velocity = velocity;
-            }
-
-        }
+    public void RpcMovePlayer(Vector3 velocity, NetworkInstanceId id)
+    {
+        MovePlayer(velocity, id);
     }
 
-    public override void OnStartClient() {
-        if (isLocalPlayer) {
-            gameObject.GetComponent<MeshRenderer>().material.color = Color.green;
-        }
+    private void MovePlayer(Vector3 velocity, NetworkInstanceId id)
+    {
+        var player = Players[id];
+        var playerRigidbody = player.GetComponent<Rigidbody>();
+        playerRigidbody.velocity = velocity;
     }
 
 

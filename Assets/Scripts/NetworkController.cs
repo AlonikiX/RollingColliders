@@ -19,7 +19,6 @@ public class NetworkController : MonoBehaviour {
             networkManager = (NetworkManager)GetComponent<NetworkManager>();
             Thread.Sleep(1000);
             networkManager.StartHost();
-
         }
     }
 
