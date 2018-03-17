@@ -1,30 +1,59 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using System.Threading;
 using UnityEngine.Networking;
 
+public class NetworkController : NetworkManager
+{
 
-public class NetworkController : MonoBehaviour {
+    bool isRoleSet;
 
-    const bool SERVER = false;
-
-    NetworkManager networkManager;
+    public event EventHandler<ServerAddPlayerEventArgs> ServerAddPlayer;
 
     // Use this for initialization
-    void Start() {
-
+    void Start()
+    {
+        isRoleSet = false;
     }
 
-    private void Update()
+    // Update is called once per frame
+    void Update()
     {
-        //Debug.Log("start");
-        if (Input.GetKeyDown(KeyCode.O)) {
-            //this.StartHost();
-            Debug.Log("start");
+        if (!isRoleSet)
+        {
+            if (Input.GetKeyDown(KeyCode.H))
+            {
+                StartHost();
+                isRoleSet = true;
+            }
+            if (Input.GetKeyDown(KeyCode.S))
+            {
+                StartServer();
+                isRoleSet = true;
+            }
+            if (Input.GetKeyDown(KeyCode.C))
+            {
+                StartClient();
+                isRoleSet = true;
+            }
         }
     }
 
+    public override void OnServerAddPlayer(NetworkConnection conn, short playerControllerId)
+    {
+        var player = (GameObject)Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
+        NetworkServer.AddPlayerForConnection(conn, player, playerControllerId);
 
+        ServerAddPlayer.Invoke(this, new ServerAddPlayerEventArgs(player));
+    }
+}
 
+public class ServerAddPlayerEventArgs : EventArgs
+{
+    public GameObject Player;
+    public ServerAddPlayerEventArgs(GameObject player)
+    {
+        this.Player = player;
+    }
 }

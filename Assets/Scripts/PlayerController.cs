@@ -5,8 +5,10 @@ using UnityEngine;
 using UnityEngine.Networking;
 using System.Linq;
 
-public class PlayerController : NetworkBehaviour
+public class PlayerController : PlayerBehaviour
 {
+
+    private NetworkController networkController;
 
     //normal moving speed of the player
     public float speed;
@@ -14,7 +16,6 @@ public class PlayerController : NetworkBehaviour
     private Rigidbody rb;
     //mana, using every skill will consume mana
     int mana = 100;
-    bool canSkill;
     float oldTime;
     float currentTime;
 
@@ -52,8 +53,17 @@ public class PlayerController : NetworkBehaviour
         ort = 0;
         crt = 0;
 
-
+        networkController = GetComponent<NetworkController>();
+        networkController.ServerAddPlayer += AddNewPlayer;
     }
+
+    private void AddNewPlayer(object sender, ServerAddPlayerEventArgs e)
+    {
+        var player = e.Player;
+        var networkId = player.GetComponent<NetworkIdentity>().netId;
+        //playerPool.Add(networkId, player);
+    }
+
 
     // Update is called once per frame
     void FixedUpdate()
@@ -94,7 +104,7 @@ public class PlayerController : NetworkBehaviour
         {
             oldTime = currentTime;
         }
-        Debug.Log(rb.velocity);
+        //Debug.Log(rb.velocity);
         var moveX = Input.GetAxisRaw("Horizontal");
         var moveZ = Input.GetAxisRaw("Vertical");
 
