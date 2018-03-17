@@ -63,8 +63,8 @@ public class PlayerController : NetworkBehaviour
             return;
         }
 
-        foreach (var player in Players)
-        {
+        //foreach (var player in Players)
+        //{
             //var playerRigidbody = player.Value.GetComponent<Rigidbody>();
             //if (positionBufferPool.ContainsKey(player.Key))
             //{
@@ -82,7 +82,7 @@ public class PlayerController : NetworkBehaviour
             //        playerRigidbody.velocity = velocityBuffer.Dequeue();
             //    }
             //}
-        }
+        //}
 
         currentTime += Time.deltaTime;
         crt += Time.deltaTime;
@@ -107,7 +107,7 @@ public class PlayerController : NetworkBehaviour
 
         if (mana < 100)
         {
-            mana += 1;
+            mana += 20;
         }
 
         if (mana == 100)
