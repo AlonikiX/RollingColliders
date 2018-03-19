@@ -46,6 +46,7 @@ public class NetworkController : NetworkManager
         NetworkServer.AddPlayerForConnection(conn, player, playerControllerId);
 
         ServerAddPlayer.Invoke(this, new ServerAddPlayerEventArgs(player));
+        Debug.Log("NetworkManager: new player");
     }
 }
 

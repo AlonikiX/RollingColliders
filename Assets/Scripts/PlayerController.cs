@@ -24,21 +24,20 @@ public class PlayerController : PlayerBehaviour
 
     private Vector3 curretnVelocity;
 
-    private Dictionary<NetworkInstanceId, GameObject> Players
-    {
-        get
-        {
-            Dictionary<NetworkInstanceId, GameObject> players = new Dictionary<NetworkInstanceId, GameObject>();
-            var playerGameObjects = GameObject.FindGameObjectsWithTag("Player");
-            foreach (var playerGameObject in playerGameObjects)
-            {
-                var networkIdentity = playerGameObject.GetComponent<NetworkIdentity>();
-                players.Add(networkIdentity.netId, playerGameObject);
+    private Dictionary<NetworkInstanceId, GameObject> playerPool = new Dictionary<NetworkInstanceId, GameObject>();
+    public Dictionary<NetworkInstanceId, GameObject> PlayerPool {
+        get {
+            var players = GameObject.FindGameObjectsWithTag("Player");
+            foreach (var player in players) {
+                var nid = player.GetComponent<NetworkIdentity>().netId;
+                if (!playerPool.ContainsKey(nid)) {
+                    playerPool.Add(nid, player);
+                }
             }
-            return players;
+
+            return playerPool;
         }
     }
-
     private Dictionary<NetworkInstanceId, Queue<Vector3>> positionBufferPool = new Dictionary<NetworkInstanceId, Queue<Vector3>>();
     private Dictionary<NetworkInstanceId, Queue<Vector3>> velocityBufferPool = new Dictionary<NetworkInstanceId, Queue<Vector3>>();
 
@@ -53,15 +52,19 @@ public class PlayerController : PlayerBehaviour
         ort = 0;
         crt = 0;
 
-        networkController = GetComponent<NetworkController>();
-        networkController.ServerAddPlayer += AddNewPlayer;
     }
 
-    private void AddNewPlayer(object sender, ServerAddPlayerEventArgs e)
-    {
-        var player = e.Player;
-        var networkId = player.GetComponent<NetworkIdentity>().netId;
-        //playerPool.Add(networkId, player);
+    [ClientRpc]
+    void RpcNewPlayer(NetworkInstanceId id) {
+        var players = GameObject.FindGameObjectsWithTag("Player");
+        foreach (var player in players) {
+            var networkIdentity = player.GetComponent<NetworkIdentity>();
+            if (networkIdentity.netId == id) {
+                PlayerPool.Add(id, player);
+            }
+        }
+        Debug.Log("Client: new player: " + id);
+        Debug.Log("Client: player count: " + PlayerPool.Count);
     }
 
 
@@ -144,7 +147,7 @@ public class PlayerController : PlayerBehaviour
             {
                 ort = crt;
 
-                foreach (var player in Players)
+                foreach (var player in PlayerPool)
                 {
                     var playerRigidbody = player.Value.GetComponent<Rigidbody>();
                     RpcSyncObject(player.Key, playerRigidbody.position, playerRigidbody.velocity);
@@ -157,7 +160,7 @@ public class PlayerController : PlayerBehaviour
     public void RpcSyncObject(NetworkInstanceId id, Vector3 pos, Vector3 vel)
     {
 
-        var player = Players[id];
+        var player = PlayerPool[id];
         var playerRigidbody = player.GetComponent<Rigidbody>();
         playerRigidbody.position = pos;
         playerRigidbody.velocity = vel;
@@ -203,7 +206,7 @@ public class PlayerController : PlayerBehaviour
 
     private void MovePlayer(Vector3 velocity, NetworkInstanceId id)
     {
-        var player = Players[id];
+        var player = PlayerPool[id];
         var playerRigidbody = player.GetComponent<Rigidbody>();
         playerRigidbody.velocity = velocity;
     }

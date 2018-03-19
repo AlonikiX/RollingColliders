@@ -24,6 +24,7 @@ public class GameController : NetworkBehaviour
         var player = e.Player;
         var networkId = player.GetComponent<NetworkIdentity>().netId;
         playerPool.Add(networkId, player);
+        Debug.Log("GameController: new player");
     }
 
     // Update is called once per frame

@@ -1,5 +1,5 @@
 ﻿<Properties StartupConfiguration="{AE6140BE-E04F-FBA6-6646-1C8E941ABA92}|">
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Scripts/PlayerBehaviour.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Scripts/GameController.cs">
     <Files>
       <File FileName="Assets/Scripts/PlayerController.cs" Line="179" Column="9" />
       <File FileName="../ICOSA/iOS/:Users:tomcat:Projects:Rolling Colliders:Assets:Scripts:NewMonoBehaviour.cs" Line="10" Column="12" />

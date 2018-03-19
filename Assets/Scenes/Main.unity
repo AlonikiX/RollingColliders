@@ -216,12 +216,11 @@ GameObject:
   serializedVersion: 5
   m_Component:
   - component: {fileID: 658823843}
-  - component: {fileID: 658823842}
   - component: {fileID: 658823841}
-  - component: {fileID: 658823844}
+  - component: {fileID: 658823842}
   m_Layer: 0
-  m_Name: Network Manager
-  m_TagString: Untagged
+  m_Name: Game Controller
+  m_TagString: GameController
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -234,13 +233,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 658823840}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 227461547, guid: 870353891bb340e2b2a9c8707e7419ba, type: 3}
+  m_Script: {fileID: 11500000, guid: d2e6c872289134aa4bbcfba8c8bf3d8f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  manager: {fileID: 0}
-  showGUI: 1
-  offsetX: 0
-  offsetY: 0
 --- !u!114 &658823842
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -249,7 +244,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 658823840}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: -822479833, guid: 870353891bb340e2b2a9c8707e7419ba, type: 3}
+  m_Script: {fileID: 11500000, guid: 160f2079f3b9b40dc9ae90608a69a9ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_NetworkPort: 7777
@@ -336,17 +331,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &658823844
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 658823840}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3d1394438efd141a4977aa84b0e367b5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!4 &830235004 stripped
 Transform:
   m_PrefabParentObject: {fileID: 4716195151747368, guid: 3161767653b8c4b56acc167e09fc49e1,

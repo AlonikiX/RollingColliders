@@ -26,6 +26,7 @@ GameObject:
   - component: {fileID: 114355871016196256}
   - component: {fileID: 114471487291882092}
   - component: {fileID: 114825710953064932}
+  - component: {fileID: 114693651712837434}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -155,6 +156,17 @@ MonoBehaviour:
   m_SnapThreshold: 6
   m_InterpolateRotation: 1
   m_InterpolateMovement: 1
+--- !u!114 &114693651712837434
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1662931854759272}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba0e7a2eb316c4bd0bdb65a87f2b5c3d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &114825710953064932
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -166,7 +178,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0b2cdd55306740bc9bb4c235458fc22, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameController: {fileID: 0}
   speed: 10
 --- !u!135 &135032118890171120
 SphereCollider:
