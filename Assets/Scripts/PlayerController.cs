@@ -8,7 +8,7 @@ using System.Linq;
 public class PlayerController : PlayerBehaviour
 {
 
-    private NetworkController networkController;
+    //private NetworkController networkController;
 
     //normal moving speed of the player
     public float speed;
@@ -24,18 +24,10 @@ public class PlayerController : PlayerBehaviour
 
     private Vector3 curretnVelocity;
 
-    private Dictionary<NetworkInstanceId, GameObject> playerPool = new Dictionary<NetworkInstanceId, GameObject>();
+    //private Dictionary<NetworkInstanceId, GameObject> playerPool = new Dictionary<NetworkInstanceId, GameObject>();
     public Dictionary<NetworkInstanceId, GameObject> PlayerPool {
         get {
-            var players = GameObject.FindGameObjectsWithTag("Player");
-            foreach (var player in players) {
-                var nid = player.GetComponent<NetworkIdentity>().netId;
-                if (!playerPool.ContainsKey(nid)) {
-                    playerPool.Add(nid, player);
-                }
-            }
-
-            return playerPool;
+            return GameObject.FindGameObjectWithTag("GameController").GetComponent<GameController>().playerPool;
         }
     }
     private Dictionary<NetworkInstanceId, Queue<Vector3>> positionBufferPool = new Dictionary<NetworkInstanceId, Queue<Vector3>>();
@@ -53,20 +45,6 @@ public class PlayerController : PlayerBehaviour
         crt = 0;
 
     }
-
-    [ClientRpc]
-    void RpcNewPlayer(NetworkInstanceId id) {
-        var players = GameObject.FindGameObjectsWithTag("Player");
-        foreach (var player in players) {
-            var networkIdentity = player.GetComponent<NetworkIdentity>();
-            if (networkIdentity.netId == id) {
-                PlayerPool.Add(id, player);
-            }
-        }
-        Debug.Log("Client: new player: " + id);
-        Debug.Log("Client: player count: " + PlayerPool.Count);
-    }
-
 
     // Update is called once per frame
     void FixedUpdate()
@@ -210,6 +188,5 @@ public class PlayerController : PlayerBehaviour
         var playerRigidbody = player.GetComponent<Rigidbody>();
         playerRigidbody.velocity = velocity;
     }
-
 
 }

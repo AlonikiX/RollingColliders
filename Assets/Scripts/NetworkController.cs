@@ -45,9 +45,10 @@ public class NetworkController : NetworkManager
         var player = (GameObject)Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
         NetworkServer.AddPlayerForConnection(conn, player, playerControllerId);
 
-        ServerAddPlayer.Invoke(this, new ServerAddPlayerEventArgs(player));
+        ServerAddPlayer?.Invoke(this, new ServerAddPlayerEventArgs(player));
         Debug.Log("NetworkManager: new player");
     }
+
 }
 
 public class ServerAddPlayerEventArgs : EventArgs
